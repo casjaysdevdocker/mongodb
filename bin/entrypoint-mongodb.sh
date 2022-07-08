@@ -4,10 +4,10 @@
 # @Author        : Jason Hempstead
 # @Contact       : jason@casjaysdev.com
 # @License       : WTFPL
-# @ReadME        : docker-entrypoint --help
+# @ReadME        : entrypoint-mongodb.sh --help
 # @Copyright     : Copyright: (c) 2022 Jason Hempstead, Casjays Developments
 # @Created       : Wednesday, Feb 02, 2022 01:47 EST
-# @File          : docker-entrypoint
+# @File          : entrypoint-mongodb.sh
 # @Description   :
 # @TODO          :
 # @Other         :
