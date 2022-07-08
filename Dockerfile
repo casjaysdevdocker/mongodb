@@ -3,7 +3,7 @@ FROM rockylinux AS source
 RUN cat <<EOF >/etc/yum.repos.d/mongodb-org-5.0.repo
 [mongodb-org-5.0]
 name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/5.0/x86_64/
+baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/5.0/\$basearch/
 gpgcheck=1
 enabled=1
 gpgkey=https://www.mongodb.org/static/pgp/server-5.0.asc
@@ -18,7 +18,12 @@ RUN dnf update -y && \
   curl \
   mongodb-org \
   nodejs \
-  npm
+  npm 
+
+RUN curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | \
+  sudo tee /etc/yum.repos.d/yarn.repo && \
+  rpm --import https://dl.yarnpkg.com/rpm/pubkey.gpg \
+  dnf install -y yarn
 
 RUN git clone https://github.com/mongo-express/mongo-express /usr/share/mongo-express && \
   cd /usr/share/mongo-express && \
