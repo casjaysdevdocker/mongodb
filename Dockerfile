@@ -10,7 +10,9 @@ gpgkey=https://www.mongodb.org/static/pgp/server-5.0.asc
 
 EOF
 
-RUN dnf module enable nodejs:14 -y
+RUN dnf module enable nodejs:14 -y && \
+  curl -q -LSsf https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo && \
+  rpm --import https://dl.yarnpkg.com/rpm/pubkey.gpg
 
 RUN dnf update -y && \
   dnf install -y \
@@ -20,15 +22,12 @@ RUN dnf update -y && \
   mongodb-org \
   nodejs \
   npm \
-  sudo
-
-RUN curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | \
-  tee /etc/yum.repos.d/yarn.repo && \
-  rpm --import https://dl.yarnpkg.com/rpm/pubkey.gpg && \
-  dnf install -y yarn
+  sudo \
+  yarn \
+  git
 
 RUN git clone https://github.com/mongo-express/mongo-express /usr/share/mongo-express && \
-  cd /usr/share/mongo-express 
+  cd /usr/share/mongo-express && npm install
 
 COPY ./bin/. /usr/local/bin/
 COPY ./config/. /config/
