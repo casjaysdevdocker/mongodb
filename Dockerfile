@@ -1,6 +1,6 @@
 FROM rockylinux AS source
 
-RUN rm -Rf /et/yum.repos.d/* && \
+RUN rm -Rf /etc/yum.repos.d/* && \
   curl -q -LSsf https://github.com/rpm-devel/casjay-release/raw/main/casjay.rh8.repo -o /etc/yum.repos.d/casjay.repo
 
 RUN dnf update -y && \
