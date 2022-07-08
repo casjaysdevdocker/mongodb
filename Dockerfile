@@ -1,14 +1,21 @@
 FROM rockylinux AS source
 
-RUN rm -Rf /etc/yum.repos.d/* && \
-  curl -q -LSsf https://github.com/rpm-devel/casjay-release/raw/main/casjay.rh8.repo -o /etc/yum.repos.d/casjay.repo
+RUN dnf module enable nodejs:14
+
+RUN cat <<EOF >/etc/yum.repos.d/mongodb-org-5.0.repo
+[mongodb-org-5.0]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/5.0/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-5.0.asc
+
+EOF
 
 RUN dnf update -y && \
   dnf install -y \
   bash \
-  curl && \
-  yum clean all && \
-  rm -Rf /etc/yum.repos.d/* 
+  curl
 
 COPY ./bin/. /usr/local/bin/
 COPY ./config/. /config/
@@ -20,6 +27,7 @@ RUN  dnf module enable nodejs && \
   cd /usr/share/mongo-express && \
   npm install
 
+RUN yum clean all && rm -Rf /etc/yum.repos.d/*
 
 COPY ./bin/. /usr/local/bin/
 COPY ./config/mongod.conf /etc/mongod.conf
@@ -34,7 +42,7 @@ LABEL \
   org.label-schema.name="mongodb" \
   org.label-schema.description="mongodb and mongo-express web interface" \
   org.label-schema.url="https://github.com/casjaysdev/mongodb" \
-  org.label-schema.vcs-url="https://github.com/casjaysdev/mongodb" \
+  org.label-schema.vcs-url="https://github.com/dockerize-it/mongodb" \
   org.label-schema.build-date=$BUILD_DATE \
   org.label-schema.version=$BUILD_DATE \
   org.label-schema.vcs-ref=$BUILD_DATE \
