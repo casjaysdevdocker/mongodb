@@ -28,8 +28,7 @@ RUN curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | \
   dnf install -y yarn
 
 RUN git clone https://github.com/mongo-express/mongo-express /usr/share/mongo-express && \
-  cd /usr/share/mongo-express && \
-  npm install
+  cd /usr/share/mongo-express 
 
 COPY ./bin/. /usr/local/bin/
 COPY ./config/. /config/
