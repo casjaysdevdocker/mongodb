@@ -25,6 +25,7 @@ COPY ./bin/. /usr/local/bin/
 COPY ./config/mongod.conf /etc/mongod.conf
 COPY ./config/mongo-express.js /usr/share/mongo-express/config.js
 
+FROM scratch
 COPY --from=source /. /
 
 ARG BUILD_DATE="$(date +'%Y-%m-%d %H:%M')" 
