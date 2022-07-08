@@ -66,3 +66,4 @@ EXPOSE 27017 19054
 
 HEALTHCHECK CMD [ "/usr/local/bin/entrypoint-mongodb.sh","healthcheck" ]
 ENTRYPOINT [ "/usr/local/bin/entrypoint-mongodb.sh"" ]
+CMD [ "/bin/bash", "-l" ]
