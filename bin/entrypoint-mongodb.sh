@@ -51,8 +51,8 @@ EOF
 [ -f "/usr/share/zoneinfo/${TZ}" ] && ln -sf "/usr/share/zoneinfo/${TZ}" "/etc/localtime"
 [ -f "/config/env.sh" ] && . "/config/env.sh"
 [ -f "/config/mongo-express.js" ] &&
-  cp -Rfv "/config/mongo-express.js" "/usr/share/mongo-express/config.js" ||
-  cp -Rfv "/usr/share/mongo-express/config.default.js" "/config/mongo-express.js"
+  cp -Rf "/config/mongo-express.js" "/usr/share/mongo-express/config.js" ||
+  cp -Rf "/usr/share/mongo-express/config.default.js" "/config/mongo-express.js"
 
 case "$1" in
 healthcheck)
@@ -71,6 +71,6 @@ bash | shell | sh)
 
 *)
   cd /usr/share/mongo-express && node /usr/share/mongo-express/app.js &
-  exec mongodb "$@"
+  exec mongod "$@"
   ;;
 esac
