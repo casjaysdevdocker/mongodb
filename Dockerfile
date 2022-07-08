@@ -1,7 +1,5 @@
 FROM rockylinux AS source
 
-RUN dnf module enable nodejs:14
-
 RUN cat <<EOF >/etc/yum.repos.d/mongodb-org-5.0.repo
 [mongodb-org-5.0]
 name=MongoDB Repository
@@ -12,22 +10,26 @@ gpgkey=https://www.mongodb.org/static/pgp/server-5.0.asc
 
 EOF
 
+RUN dnf module enable nodejs:14
+
 RUN dnf update -y && \
   dnf install -y \
   bash \
-  curl
+  curl \
+  mongodb-org \
+  nodejs \
+  npm
+
+RUN git clone https://github.com/mongo-express/mongo-express /usr/share/mongo-express && \
+  cd /usr/share/mongo-express && \
+  npm install
 
 COPY ./bin/. /usr/local/bin/
 COPY ./config/. /config/
 COPY ./data/. /data/
 
-RUN  dnf module enable nodejs && \
-  dnf install -y mongodb-org nodejs npm && \
-  git clone https://github.com/mongo-express/mongo-express /usr/share/mongo-express && \
-  cd /usr/share/mongo-express && \
-  npm install
-
-RUN yum clean all && rm -Rf /etc/yum.repos.d/*
+RUN yum clean all && \
+  rm -Rf /etc/yum.repos.d/*
 
 COPY ./bin/. /usr/local/bin/
 COPY ./config/mongod.conf /etc/mongod.conf
