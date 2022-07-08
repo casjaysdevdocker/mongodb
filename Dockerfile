@@ -10,7 +10,7 @@ gpgkey=https://www.mongodb.org/static/pgp/server-5.0.asc
 
 EOF
 
-RUN dnf module enable nodejs:14
+RUN dnf module enable nodejs:14 -y
 
 RUN dnf update -y && \
   dnf install -y \
