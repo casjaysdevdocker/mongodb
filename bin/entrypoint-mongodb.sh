@@ -54,8 +54,6 @@ EOF
   cp -Rfv "/config/mongo-express.js" "/usr/share/mongo-express/config.js" ||
   cp -Rfv "/usr/share/mongo-express/config.default.js" "/config/mongo-express.js"
 
-[ "$(stat -c %U /data/db)" = mongodb ] || chown -R mongodb /data/db
-
 case "$1" in
 healthcheck)
   if netstat -taupln | grep 'node' | grep -q '19054' && netstat -taupln | grep 'mongo' | grep -q '27017'; then
