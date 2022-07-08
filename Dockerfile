@@ -1,5 +1,7 @@
 FROM rockylinux AS source
 
+ARG NODE_VERSION="16"
+
 RUN cat <<EOF >/etc/yum.repos.d/mongodb-org-5.0.repo
 [mongodb-org-5.0]
 name=MongoDB Repository
@@ -10,7 +12,7 @@ gpgkey=https://www.mongodb.org/static/pgp/server-5.0.asc
 
 EOF
 
-RUN dnf module enable nodejs:18 -y && \
+RUN dnf module enable nodejs:$NODE_VERSION -y && \
   curl -q -LSsf https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo && \
   rpm --import https://dl.yarnpkg.com/rpm/pubkey.gpg && \
   dnf update -y && \
@@ -26,10 +28,6 @@ RUN dnf module enable nodejs:18 -y && \
   git && \
   git clone https://github.com/mongo-express/mongo-express /usr/share/mongo-express && \
   cd /usr/share/mongo-express && npm install
-
-COPY ./bin/. /usr/local/bin/
-COPY ./config/. /config/
-COPY ./data/. /data/
 
 RUN yum clean all && \
   rm -Rf /etc/yum.repos.d/*
