@@ -26,6 +26,7 @@ RUN dnf module enable nodejs:$NODE_VERSION -y && \
   sudo \
   yarn \
   git && \
+  mkdir -p "/data" "/config" && \
   git clone https://github.com/mongo-express/mongo-express /usr/share/mongo-express && \
   cd /usr/share/mongo-express && npm install
 
