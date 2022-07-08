@@ -16,13 +16,15 @@ RUN dnf update -y && \
   dnf install -y \
   bash \
   curl \
+  wget \
   mongodb-org \
   nodejs \
-  npm 
+  npm \
+  sudo
 
 RUN curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo | \
-  sudo tee /etc/yum.repos.d/yarn.repo && \
-  rpm --import https://dl.yarnpkg.com/rpm/pubkey.gpg \
+  tee /etc/yum.repos.d/yarn.repo && \
+  rpm --import https://dl.yarnpkg.com/rpm/pubkey.gpg && \
   dnf install -y yarn
 
 RUN git clone https://github.com/mongo-express/mongo-express /usr/share/mongo-express && \
