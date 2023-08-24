@@ -1,0 +1,54 @@
+#!/usr/bin/env sh
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+##@Version           :  202308222354-git
+# @@Author           :  CasjaysDev
+# @@Contact          :  CasjaysDev <docker-admin@casjaysdev.pro>
+# @@License          :  MIT
+# @@ReadME           :
+# @@Copyright        :  Copyright 2023 CasjaysDev
+# @@Created          :  Tue Aug 22 11:54:37 PM EDT 2023
+# @@File             :  packages"
+# @@Description      :  script run to packages"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# shellcheck shell=sh
+# shellcheck disable=SC2016
+# shellcheck disable=SC2031
+# shellcheck disable=SC2120
+# shellcheck disable=SC2155
+# shellcheck disable=SC2199
+# shellcheck disable=SC2317
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+set -ex
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+NODE_VERSION="${NODE_VERSION:-16}"
+MONGO_VERSION="${MONGO_VERSION:-4.4}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cat <<EOF | tee "/etc/yum.repos.d/mongodb-org.repo"
+[mongodb-org]
+name=MongoDB ${MONGO_VERSION} - \$basearch
+baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/${MONGO_VERSION}/\$basearch/
+gpgcheck=1
+enabled=1
+gpgkey=https://pgp.mongodb.com/server-${MONGO_VERSION}.pub
+
+EOF
+cat <<EOF | tee tee "/etc/yum.repos.d/nodejs"
+[casjay-nodejs]
+name=nodejs for server use - \$releasever \$basearch
+baseurl=https://rpm.nodesource.com/pub_${NODE_VERSION}.x/el/\$releasever/\$basearch
+gpgkey=https://rpm.nodesource.com/pub/el/NODESOURCE-GPG-SIGNING-KEY-EL
+module_hotfixes=1
+enabled=1
+gpgcheck=1
+
+[casjay-yarn]
+name=Yarn for server use - \$releasever \$basearch
+baseurl=https://dl.yarnpkg.com/rpm/
+gpgkey=https://dl.yarnpkg.com/rpm/pubkey.gpg
+enabled=1
+gpgcheck=1
+EOF
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+pkmgr install mongodb-org mongodb-org-server mongodb-database-tools mongodb-mongosh yarn nodejs
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+exit
