@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-##@Version           :  202308222354-git
+##@Version           :  202309031840-git
 # @@Author           :  Jason Hempstead
 # @@Contact          :  jason@casjaysdev.pro
 # @@License          :  WTFPL
 # @@ReadME           :  docker-entrypoint --help
 # @@Copyright        :  Copyright: (c) 2023 Jason Hempstead, Casjays Developments
-# @@Created          :  Tuesday, Aug 22, 2023 23:54 EDT
+# @@Created          :  Sunday, Sep 03, 2023 18:40 EDT
 # @@File             :  docker-entrypoint
 # @@Description      :  
 # @@Changelog        :  New script
@@ -53,32 +53,32 @@ for set_env in "/root/env.sh" "/usr/local/etc/docker/env"/*.sh "/config/env"/*.s
 done
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Builtin functions
-__is_dir_empty() { [ "$(ls -A "$1" 2>/dev/null | wc -l)" -eq 0 ] && return 0 || return 1; }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Custom functions
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define script variables
-SERVICE_USER="root" # execute command as another user
-SERVICE_GROUP=""    # Set user group for permission fix
-SERVICE_UID="0"     # set the user id for creation of user
-SERVICE_PORT=""     # specifiy port which service is listening on
+RUNAS_USER=""    # Default is root
+SERVICE_UID=""   # set the user id
+SERVICE_GID=""   # set the group id
+SERVICE_USER=""  # execute command as another user
+SERVICE_GROUP="" # Set the service group
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Primary server port- will be added to server ports
+WEB_SERVER_PORT="" # port : 80,443
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Secondary ports
+SERVER_PORTS="" # specifiy other ports
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Server directories
+WWW_ROOT_DIR="" # set default web dir
+DATABASE_DIR="" # set database dir
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Healthcheck variables
 HEALTH_ENABLED="yes" # enable healthcheck [yes/no]
 SERVICES_LIST="tini" # comma seperated list of processes for the healthcheck
-SERVER_PORTS=""      # ports : 80,443
 HEALTH_ENDPOINTS=""  # url endpoints: [http://localhost/health,http://localhost/test]
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Additional
-PHP_INI_DIR="${PHP_INI_DIR:-$(__find_php_ini)}"
-PHP_BIN_DIR="${PHP_BIN_DIR:-$(__find_php_bin)}"
-HTTPD_CONFIG_FILE="${HTTPD_CONFIG_FILE:-$(__find_httpd_conf)}"
-NGINX_CONFIG_FILE="${NGINX_CONFIG_FILE:-$(__find_nginx_conf)}"
-MYSQL_CONFIG_FILE="${MYSQL_CONFIG_FILE:-$(__find_mysql_conf)}"
-PGSQL_CONFIG_FILE="${PGSQL_CONFIG_FILE:-$(__find_pgsql_conf)}"
-MONGODB_CONFIG_FILE="${MONGODB_CONFIG_FILE:-$(__find_mongodb_conf)}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Overwrite variables
 
@@ -88,8 +88,52 @@ __run_message() {
   return
 }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+################## END OF CONFIGURATION #####################
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Startup variables
+export INIT_DATE="${INIT_DATE:-$(date)}"
+export START_SERVICES="${START_SERVICES:-yes}"
+export ENTRYPOINT_MESSAGE="${ENTRYPOINT_MESSAGE:-yes}"
+export ENTRYPOINT_FIRST_RUN="${ENTRYPOINT_FIRST_RUN:-yes}"
+export DATA_DIR_INITIALIZED="${DATA_DIR_INITIALIZED:-false}"
+export CONFIG_DIR_INITIALIZED="${CONFIG_DIR_INITIALIZED:-false}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# System
+export LANG="${LANG:-C.UTF-8}"
+export LC_ALL="${LANG:-C.UTF-8}"
+export TZ="${TZ:-${TIMEZONE:-America/New_York}}"
+export HOSTNAME="${FULL_DOMAIN_NAME:-${SERVER_HOSTNAME:-$HOSTNAME}}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Default directories
+export SSL_DIR="${SSL_DIR:-/config/ssl}"
+export SSL_CA="${SSL_CERT:-/config/ssl/ca.crt}"
+export SSL_KEY="${SSL_KEY:-/config/ssl/localhost.pem}"
+export SSL_CERT="${SSL_CERT:-/config/ssl/localhost.crt}"
+export BACKUP_DIR="${BACKUP_DIR:-/data/backups}"
+export LOCAL_BIN_DIR="${LOCAL_BIN_DIR:-/usr/local/bin}"
+export DEFAULT_DATA_DIR="${DEFAULT_DATA_DIR:-/usr/local/share/template-files/data}"
+export DEFAULT_CONF_DIR="${DEFAULT_CONF_DIR:-/usr/local/share/template-files/config}"
+export DEFAULT_TEMPLATE_DIR="${DEFAULT_TEMPLATE_DIR:-/usr/local/share/template-files/defaults}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Additional
+export PHP_INI_DIR="${PHP_INI_DIR:-$(__find_php_ini)}"
+export PHP_BIN_DIR="${PHP_BIN_DIR:-$(__find_php_bin)}"
+export HTTPD_CONFIG_FILE="${HTTPD_CONFIG_FILE:-$(__find_httpd_conf)}"
+export NGINX_CONFIG_FILE="${NGINX_CONFIG_FILE:-$(__find_nginx_conf)}"
+export MYSQL_CONFIG_FILE="${MYSQL_CONFIG_FILE:-$(__find_mysql_conf)}"
+export PGSQL_CONFIG_FILE="${PGSQL_CONFIG_FILE:-$(__find_pgsql_conf)}"
+export MONGODB_CONFIG_FILE="${MONGODB_CONFIG_FILE:-$(__find_mongodb_conf)}"
+export ENTRYPOINT_PID_FILE="${ENTRYPOINT_PID_FILE:-/run/init.d/entrypoint.pid}"
+export ENTRYPOINT_INIT_FILE="${ENTRYPOINT_INIT_FILE:-/config/.entrypoint.done}"
+export ENTRYPOINT_DATA_INIT_FILE="${ENTRYPOINT_DATA_INIT_FILE:-/data/.docker_has_run}"
+export ENTRYPOINT_CONFIG_INIT_FILE="${ENTRYPOINT_CONFIG_INIT_FILE:-/config/.docker_has_run}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if [ -f "$ENTRYPOINT_PID_FILE" ] || [ -f "$ENTRYPOINT_INIT_FILE" ]; then
+  START_SERVICES="no" ENTRYPOINT_MESSAGE="no" ENTRYPOINT_FIRST_RUN="no"
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # variables based on env/files
-[ "$SERVICE_PORT" = "443" ] && SSL_ENABLED="true"
+[ "$WEB_SERVER_PORT" = "443" ] && SSL_ENABLED="true"
 [ -f "/config/enable/ssl" ] && SSL_ENABLED="true"
 [ -f "/config/enable/ssh" ] && SSH_ENABLED="true"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -101,19 +145,6 @@ __run_message() {
 [ -f "$ENTRYPOINT_CONFIG_INIT_FILE" ] && CONFIG_DIR_INITIALIZED="true" || CONFIG_DIR_INITIALIZED="false"
 { [ -f "$ENTRYPOINT_PID_FILE" ] || [ -f "$ENTRYPOINT_INIT_FILE" ]; } && ENTRYPOINT_FIRST_RUN="no" || ENTRYPOINT_FIRST_RUN="true"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Default directories
-BACKUP_DIR="${BACKUP_DIR:-/data/backups}"
-LOCAL_BIN_DIR="${LOCAL_BIN_DIR:-/usr/local/bin}"
-WWW_ROOT_DIR="${WWW_ROOT_DIR:-/usr/share/webapps}"
-DEFAULT_DATA_DIR="${DEFAULT_DATA_DIR:-/usr/local/share/template-files/data}"
-DEFAULT_CONF_DIR="${DEFAULT_CONF_DIR:-/usr/local/share/template-files/config}"
-DEFAULT_TEMPLATE_DIR="${DEFAULT_TEMPLATE_DIR:-/usr/local/share/template-files/defaults}"
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Rewrite base on env
-WWW_DIR="${ENV_WWW_DIR:-$WWW_DIR}"                # set default web dir
-WWW_ROOT_DIR="${WWW_DIR:-$WWW_ROOT_DIR}"          # set default web dir
-DATABASE_DIR="${ENV_DATABASE_DIR:-$DATABASE_DIR}" # set database dir
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # clean ENV_PORTS variables
 ENV_PORTS="${ENV_PORTS//,/ }"  #
 ENV_PORTS="${ENV_PORTS//\/*/}" #
@@ -123,14 +154,14 @@ SERVER_PORTS="${SERVER_PORTS//,/ }"  #
 SERVER_PORTS="${SERVER_PORTS//\/*/}" #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # clean WEB_SERVER_PORTS variables
-WEB_SERVER_PORTS="${SERVICE_PORT//\/*/}"                         #
-WEB_SERVER_PORTS="${WEB_SERVER_PORTS//\/*/}"                     #
-WEB_SERVER_PORTS="${SERVICE_PORT//,/ } ${WEB_SERVER_PORTS//,/ }" #
+WEB_SERVER_PORTS="${WEB_SERVER_PORT//\/*/}"                             #
+WEB_SERVER_PORTS="${WEB_SERVER_PORTS//\/*/}"                            #
+WEB_SERVER_PORTS="${WEB_SERVER_PORT//,/ } ${ENV_WEB_SERVER_PORTS//,/ }" #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # rewrite and merge variables
-ENV_PORTS="$(echo "$ENV_PORTS" | tr ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ' ' | grep '^' || false)"
-WEB_SERVER_PORTS="$(echo "$WEB_SERVER_PORTS" | tr ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ' ' | grep '^' || false)"
-ENV_PORTS="$(echo "$SERVER_PORTS" "$WEB_SERVER_PORTS" "$ENV_PORTS" "$SERVER_PORTS" | tr ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ' ' | grep '^' || false)"
+ENV_PORTS="$(__format_variables "$ENV_PORTS" || false)"
+WEB_SERVER_PORTS="$(__format_variables "$WEB_SERVER_PORTS" || false)"
+ENV_PORTS="$(__format_variables "$SERVER_PORTS" "$WEB_SERVER_PORTS" "$ENV_PORTS" "$SERVER_PORTS" || false)"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #
 HEALTH_ENDPOINTS="${HEALTH_ENDPOINTS//,/ }"
@@ -164,7 +195,12 @@ chmod -f 666 "/dev/stdout"
 chmod -f 777 "/config/enable"
 chmod -f 777 "/config/secure"
 chmod -f 777 "/data/logs/entrypoint.log"
-################## END OF CONFIGURATION #####################
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+cat <<EOF >/etc/profile.d/locales.shadow
+export LANG="\${LANG:-C.UTF-8}"
+export LC_ALL="\${LANG:-C.UTF-8}"
+export TZ="\${TZ:-\${TIMEZONE:-America/New_York}}"
+EOF
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Create the backup dir
 [ -n "$BACKUP_DIR" ] && { [ -d "$BACKUP_DIR" ] || mkdir -p "$BACKUP_DIR"; }
@@ -188,29 +224,29 @@ if [ "$ENTRYPOINT_FIRST_RUN" != "no" ]; then
   if [ "$UPDATE_FILE_HOSTS" = "true" ]; then
     echo "# known hostname mappings" >"/etc/hosts"
     if [ -n "$(ip a 2>/dev/null | grep 'inet6.*::' || ifconfig 2>/dev/null | grep 'inet6.*::')" ]; then
-      echo "127.0.0.1       localhost" >>"/etc/hosts"
-      echo "::1             localhost" >>"/etc/hosts"
+      __printf_space "40" "::1" "localhost" >>"/etc/hosts"
+      __printf_space "40" "127.0.0.1" "localhost" >>"/etc/hosts"
     else
-      echo "127.0.0.1       localhost" >>"/etc/hosts"
+      __printf_space "40" "127.0.0.1" "localhost" >>"/etc/hosts"
     fi
   fi
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # add .home domain
   if [ "$UPDATE_FILE_HOSTS" = "true" ] && [ -n "$HOSTNAME" ]; then
-    __grep_test " $HOSTNAME" "/etc/hosts" || echo "${CONTAINER_IP4_ADDRESS:-127.0.0.1}      $HOSTNAME" >>"/etc/hosts"
-    __grep_test " ${HOSTNAME%%.*}.home" "/etc/hosts" || echo "${CONTAINER_IP4_ADDRESS:-127.0.0.1}      ${HOSTNAME%%.*}.home" >>"/etc/hosts"
+    __grep_test " $HOSTNAME" "/etc/hosts" || __printf_space "40" "${CONTAINER_IP4_ADDRESS:-127.0.0.1}" "$HOSTNAME" >>"/etc/hosts"
+    __grep_test " ${HOSTNAME%%.*}.home" "/etc/hosts" || __printf_space "40" "${CONTAINER_IP4_ADDRESS:-127.0.0.1}" "${HOSTNAME%%.*}.home" >>"/etc/hosts"
   fi
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # add domainname
   if [ "$UPDATE_FILE_HOSTS" = "true" ] && [ "$DOMAINNAME" != "home" ] && [ -n "$DOMAINNAME" ] && [ "$HOSTNAME.$DOMAINNAME" != "$DOMAINNAME" ]; then
-    __grep_test " $HOSTNAME.$DOMAINNAME" "/etc/hosts" || echo "${CONTAINER_IP4_ADDRESS:-127.0.0.1}      $HOSTNAME.$DOMAINNAME" >>"/etc/hosts"
+    __grep_test " ${HOSTNAME%%.*}.$DOMAINNAME" "/etc/hosts" || __printf_space "40" "${CONTAINER_IP4_ADDRESS:-127.0.0.1}" "${HOSTNAME%%.*}.$DOMAINNAME" >>"/etc/hosts"
   fi
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Set containers hostname
   [ -n "$HOSTNAME" ] && [ "$UPDATE_FILE_HOSTS" = "true" ] && echo "$HOSTNAME" >"/etc/hostname"
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Set containers hostname with domain
-  [ -n "$DOMAINNAME" ] && [ "$UPDATE_FILE_HOSTS" = "true" ] && echo "$HOSTNAME.$DOMAINNAME" >"/etc/hostname"
+  # [ -n "$DOMAINNAME" ] && [ "$UPDATE_FILE_HOSTS" = "true" ] && echo "$HOSTNAME.$DOMAINNAME" >"/etc/hostname"
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if [ -f "/etc/hostname" ]; then
     [ -n "$(type -P hostname)" ] && hostname -F "/etc/hostname" &>/dev/null || HOSTNAME="$(<"/etc/hostname")"
@@ -234,31 +270,19 @@ fi
 [ -d "/config" ] && rm -Rf "/config/.gitkeep" "/config"/*/*.gitkeep
 [ -f "/usr/local/bin/.gitkeep" ] && rm -Rf "/usr/local/bin/.gitkeep"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Setup bin directory
+# Setup bin directory - /config/bin > /usr/local/bin
 __initialize_custom_bin_dir
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Copy default config
+# Copy default system configs - /usr/local/share/template-files/defaults > /config/
 __initialize_default_templates
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Copy custom config files
+# Copy custom config files - /usr/local/share/template-files/config > /config/
 __initialize_config_dir
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Copy custom data files
+# Copy custom data files - /usr/local/share/template-files/data > /data/
 __initialize_data_dir
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Replace variables before copying to system
-__initialize_replace_variables "/config"
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Copy /config to /etc
-__initialize_system_etc
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Copy html files
-__initialize_www_root
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 __initialize_ssl_certs
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# run pre-execute function
-__run_pre "$@"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if [ -f "$ENTRYPOINT_PID_FILE" ] || [ -f "$ENTRYPOINT_INIT_FILE" ]; then
   START_SERVICES="no"
@@ -288,13 +312,13 @@ if [ "$ENTRYPOINT_FIRST_RUN" != "no" ]; then
   __setup_mta
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-[ "$ENTRYPOINT_MESSAGE" = "yes" ] && echo "Container ip address is: $CONTAINER_IP4_ADDRESS"
+[ "$ENTRYPOINT_MESSAGE" = "yes" ] && __printf_space "40" "Container ip address is:" "$CONTAINER_IP4_ADDRESS"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Show configured listing processes
 if [ "$ENTRYPOINT_MESSAGE" = "yes" ] && [ -n "$ENV_PORTS" ]; then
   show_port=""
   for port in $ENV_PORTS; do [ -n "$port" ] && show_port+="$(printf '%s ' "${port// /}") "; done
-  printf '%s\n' "The following ports are open: $show_port"
+  __printf_space "40" "The following ports are open:" "$show_port"
   unset port show_port
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -325,6 +349,7 @@ init)
 cron)
   shift 1
   __cron "$@" &
+  exit
   ;;
 
 backup) # backup data and config dirs
@@ -416,12 +441,13 @@ certbot) # manage ssl certificate
 
 exec) # execute commands
   shift 1
-  __exec_command "${@:-exit}"
+  __exec_command "${@:-echo "No commands given"}"
+  exit $?
   ;;
 
 start) # show/start init scripts
   shift 1
-  PATH="/usr/local/etc/docker/init.d:$PATH"
+  export PATH="/usr/local/etc/docker/init.d:$PATH"
   if [ $# -eq 0 ]; then
     scripts="$(ls -A "/usr/local/etc/docker/init.d")"
     [ -n "$scripts" ] && echo "$scripts" || echo "No scripts found in: /usr/local/etc/docker/init.d"
@@ -433,6 +459,7 @@ start) # show/start init scripts
     eval "/usr/local/etc/docker/init.d/$1"
   fi
   __no_exit
+  exit $?
   ;;
 
 *) # Execute primary command
@@ -445,6 +472,7 @@ start) # show/start init scripts
   else
     __exec_command "$@"
   fi
+  exit $?
   ;;
 esac
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
